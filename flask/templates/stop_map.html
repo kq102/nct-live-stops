@@ -1,0 +1,27 @@
+<html>
+<head>
+    <title>Stop Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="../static/stop_map.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <div id="leftSidePanel">
+        <div id="searchSection">
+            <a href="https://app.pulsetic.com/status/5e9TnbTi/" target="_blank" class="status">Service Status</a>
+            <div class="searchWrapper">
+                <input id="stopSearchInput" type="text" placeholder="Search stop number...">
+                <button id = "searchStopButton">Search</button>
+            </div>
+        </div>
+        <div id="sidebar">
+            <div id = "sidebarContent"></div>
+            <!-- <button id="sidebarClose" aria-label="Close">
+                &times;
+            </button> -->
+        </div>
+    </div>
+    <div id="map" tabindex="0"></div>
+    <script src="../static/load_stops.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+#map 
+    {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+    }
+
+
+#leftSidePanel
+    {
+        position: absolute;
+        top:10px;
+        left:10px;
+        width: 600px;
+        max-height: calc(100% - 20px);
+        z-index:1000;
+        display: flex;
+        flex-direction: column;
+        font-family: MetropolisRegular;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2)
+    }
+
+#searchSection
+    {
+        background-color: rgb(255, 254, 239);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid rgb(255, 254, 239);;
+    }
+
+#vehicleSearchInput
+    {
+        flex: 1;
+        min-width: 0;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: MetropolisRegular;
+    }
+
+#searchVehicleButton 
+    {
+        padding: 8px 16px;
+        background: #009b8b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+
+    }
+
+#searchVehicleButton:hover 
+    {
+        background: #008577;
+    }
+
+#sidebar
+    {
+        display: none;
+        background: rgb(255, 254, 239);;
+        margin-top: 10px;
+        border-radius: 8px;
+        padding: 20px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        border: 1px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2)
+    }
+
+.searchWrapper
+    {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
