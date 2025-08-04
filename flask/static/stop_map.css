@@ -1,3 +1,8 @@
+@font-face {
+    font-family: MetropolisRegular;
+    src: url(/static/Metropolis-Regular.ttf);
+}
+
 #map 
     {
         position: absolute;
@@ -14,7 +19,7 @@
         position: absolute;
         top:10px;
         left:10px;
-        width: 600px;
+        width: 650px;
         max-height: calc(100% - 20px);
         z-index:1000;
         display: flex;
@@ -32,27 +37,6 @@
         border: 1px solid rgb(255, 254, 239);;
     }
 
-#vehicleSearchInput
-    {
-        flex: 1;
-        min-width: 0;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-family: MetropolisRegular;
-    }
-
-#searchVehicleButton 
-    {
-        padding: 8px 16px;
-        background: #009b8b;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-
-    }
-
 #searchVehicleButton:hover 
     {
         background: #008577;
@@ -60,6 +44,7 @@
 
 #sidebar
     {
+        flex-grow: 1;
         display: none;
         background: rgb(255, 254, 239);;
         margin-top: 10px;
@@ -76,4 +61,131 @@
         display: flex;
         gap: 8px;
         margin-top: 10px;
+    }
+
+
+#vehicleSearchInput 
+    {
+        flex-grow: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+#searchStopButton 
+    {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+.status 
+    {
+        display: inline-block;
+        margin-bottom: 10px;
+        color: #007bff;
+        text-decoration: none;
+    }
+
+.stopComparison 
+    {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+.comparisonTitle 
+    {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+.timeColumns 
+    {
+        display: flex;
+        gap: 20px;
+    }
+
+.timeColumn 
+    {
+        flex: 1;
+    }
+
+.columnTitle 
+    {
+        font-weight: bold;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 2px solid #007bff;
+    }
+
+.timeEntry 
+    {
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+.loading 
+    {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+
+.stopMarker 
+    {
+        border: 2px solid #333;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+.stopMarker:hover 
+    {
+        background: #007bff;
+        border-color: #0056b3;
+    }
+
+.updateTime 
+    {
+        font-size: 0.8em;
+        color: #666;
+        text-align: left;
+        margin-top: 10px;
+        font-style: italic;
+    }
+
+.countdown-bar 
+    {
+        width: 100%;
+        height: 2px;
+        background-color: #eee;
+        position: relative;
+        margin-top: 10px;
+    }
+
+.countdown-bar .progress 
+    {
+        height: 100%;
+        background-color: #007bff;
+        width: 100%;
+        transform-origin: left;
+        animation: countdown 15s linear infinite;
+    }
+
+@keyframes countdown 
+    {
+        from {
+            transform: scaleX(1);
+        }
+        to {
+            transform: scaleX(0);
+        }
     }

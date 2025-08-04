@@ -4,9 +4,7 @@ from dotenv import load_dotenv # for loading environment variables from a .env f
 
 from live_data_scrapers import fetch_live_data_council, fetch_live_data_nctx, driver_quit
 from browser import initialize_app_data
-from stop_getters_level2 import get_enriched_stops
-
-
+from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mongo
 
 from flask_pymongo import PyMongo
 from flask import Flask, render_template, jsonify
@@ -25,26 +23,29 @@ app = Flask (__name__)
 #app.config['SCHEDULER_TIMEZONE'] = "Europe/London"
 
 #mongo = PyMongo(app)
-browser = initialize_app_data()
+
 
 @app.route('/')
 def home():
     return render_template("stop_map.html")
 
-# def get_all_stops():
-#     """Returns all NCT stops with coordinates"""
-#     stops = get_enriched_stops(mongo)
-#     return jsonify([{
-#         'stop_code': code,
-#         'stop_name': name,
-#         'lat': lat,
-#         'lon': lon
-#     } for code, name, lat, lon in stops])
+@app.route('/get_all_stops')
+def get_all_stops():
+    """Returns all NCT stops with coordinates"""
+    stops = get_enriched_stops_without_mongo()
+    # stops = get_enriched_stops(mongo)
+    return jsonify([{
+        'stop_code': code,
+        'stop_name': name,
+        'lat': lat,
+        'lon': lon
+    } for code, name, lat, lon in stops])
 
 @app.route('/compare_stop_times/<stop_id>')
 def compare_stop_times(stop_id):
     """Compares times from NCT and Council sources"""
     try:
+        browser = initialize_app_data()
         council_times = fetch_live_data_council(browser,stop_id)
         nct_times = fetch_live_data_nctx(browser,stop_id)
         
@@ -52,19 +53,15 @@ def compare_stop_times(stop_id):
             'council_times': council_times,
             'nct_times': nct_times
         })
+    
+    # serve the error if it applies
     except Exception as e:
         print(f"Error comparing stop times: {e}")
         return jsonify({'error': str(e)}), 500
-
-
-@app.route('/fetch_live_data')
-def do():
-    nctx_live = fetch_live_data_nctx(browser,"3390SN61")
-    council_live = fetch_live_data_council(browser,"3390SN61")
-
-    driver_quit(browser)
-    return nctx_live + council_live
-
     
+    # finally quit the driver
+    finally:
+        driver_quit(browser)
+
 if __name__ == "__main__":
     app.run(debug=True)

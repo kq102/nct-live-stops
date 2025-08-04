@@ -13,12 +13,14 @@ def fetch_live_data_council(driver, stop_id):
 
     driver.get(council_url)
 
-    time.sleep(1.7)  # await js loading
+    time.sleep(2.2)  # await js loading
 
-    council_stop_name = driver.find_element(By.TAG_NAME, "lts-stop-name").text
+    # redundant use of stop names
+    # council_stop_name = driver.find_element(By.TAG_NAME, "lts-stop-name").text
     departure_cards = driver.find_elements(By.TAG_NAME, "lts-live-departure-card")
 
-    council_data_list.append(council_stop_name)
+    # council_data_list.append(council_stop_name)
+
     # loop through the departure cards and get just the text from the relevant fields
     for card in departure_cards:
         cells=card.find_elements(By.XPATH,".//div[@role='gridcell']")
@@ -42,15 +44,17 @@ def fetch_live_data_nctx(driver, stop_id):
 
     driver.get(nct_url)
     
-    time.sleep(1.7)  # await js loading
+    time.sleep(1)  # await js loading
 
-    stop_name = driver.find_element(By.CLASS_NAME, "place-info-banner__name").text.strip()
-    stop_code = driver.find_element(By.CLASS_NAME, "place-info-banner__tablet").text.strip()
+    # redundant stop_name data
+    # stop_name = driver.find_element(By.CLASS_NAME, "place-info-banner__name").text.strip()
+    # stop_code = driver.find_element(By.CLASS_NAME, "place-info-banner__tablet").text.strip()
     
     departures = driver.find_elements(By.CLASS_NAME, "departure-board__item")
 
-    live_times_from_stop_name = f"{stop_name} {stop_code}"
-    nct_data_list.append(live_times_from_stop_name)
+    # redundant appendage to list of stop names
+    # live_times_from_stop_name = f"{stop_name} {stop_code}"
+    # nct_data_list.append(live_times_from_stop_name)
 
     # each line get the route, dest, time & css colour to determine if time is scheduled or not
     for line in departures:
