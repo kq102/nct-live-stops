@@ -7,10 +7,8 @@
     {
         position: absolute;
         top: 0;
-        left: 0;
-        right: 0;
         bottom: 0;
-        z-index: 1;
+        width: 100%;
     }
 
 
@@ -127,8 +125,35 @@
 
 .timeEntry 
     {
-        padding: 5px 0;
+        display:flex;
+        justify-content: space-between;
+        margin-bottom:12px;
+        padding: 8px 0;
         border-bottom: 1px solid #eee;
+    }
+
+.timeEntry-left
+    {
+        display: flex;
+        flex-direction: column;
+        gap:4px;
+    }
+
+.route
+    {
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+
+.destination
+    {
+        font-size: 0.85em;
+    }
+
+.time
+    {   
+        font-weight: bold;
+        color:#3144ac;
     }
 
 .loading 
@@ -138,27 +163,13 @@
         color: #666;
     }
 
-.stopMarker 
-    {
-        border: 2px solid #333;
-        background: white;
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-.stopMarker:hover 
-    {
-        background: #007bff;
-        border-color: #0056b3;
-    }
-
 .updateTime 
     {
         font-size: 0.8em;
         color: #666;
         text-align: left;
-        margin-top: 10px;
+        margin-top: 2.5px;
+        margin-bottom: 5px;
         font-style: italic;
     }
 

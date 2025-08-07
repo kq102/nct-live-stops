@@ -1,4 +1,4 @@
-from get_stops_from_db import get_enriched_stops_without_mongo
+from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mongo
 from flask import jsonify
 
 def get_all_stops():

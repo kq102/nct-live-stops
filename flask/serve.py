@@ -1,13 +1,17 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv # for loading environment variables from a .env file
 
 
-from live_data_scrapers import fetch_live_data_council, fetch_live_data_nctx, driver_quit
-from browser import initialize_app_data
+from live_data_scrapers import fetch_live_data_council, fetch_live_data_nctx
+from browser import BrowserManager
 from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mongo
 
 from flask_pymongo import PyMongo
 from flask import Flask, render_template, jsonify
+
+from contextlib import contextmanager
+import atexit
 
 # loading environment variables
 load_dotenv()
@@ -24,9 +28,21 @@ app = Flask (__name__)
 
 #mongo = PyMongo(app)
 
+executor = ThreadPoolExecutor(max_workers=2)
+
+def cleanup_resources():
+    """clearing resources"""
+    try:
+        executor.shutdown(wait=False)
+    except Exception:
+        pass
+    BrowserManager.quit_browser()
+
+
 
 @app.route('/')
 def home():
+    """home page, renders map"""
     return render_template("stop_map.html")
 
 @app.route('/get_all_stops')
@@ -43,25 +59,33 @@ def get_all_stops():
 
 @app.route('/compare_stop_times/<stop_id>')
 def compare_stop_times(stop_id):
-    """Compares times from NCT and Council sources"""
+    """Load NCT and bus stop times"""
     try:
-        browser = initialize_app_data()
-        council_times = fetch_live_data_council(browser,stop_id)
-        nct_times = fetch_live_data_nctx(browser,stop_id)
+        browser = BrowserManager.initialize_browser()
+        if not browser:
+            return jsonify({'error': 'Browser unavailable'} ), 503
+
+        nct_request = executor.submit(fetch_live_data_nctx, browser, stop_id)
+        bus_stop_request = executor.submit(fetch_live_data_council, browser, stop_id)
+
+        nct_times = nct_request.result()
+        council_times = bus_stop_request.result()
         
         return jsonify({
             'council_times': council_times,
             'nct_times': nct_times
         })
-    
+
     # serve the error if it applies
     except Exception as e:
         print(f"Error comparing stop times: {e}")
         return jsonify({'error': str(e)}), 500
-    
-    # finally quit the driver
-    finally:
-        driver_quit(browser)
+
+try:
+    app.teardown_appcontext(lambda exception: None)
+    atexit.register(cleanup_resources)
+except Exception:
+    pass
 
 if __name__ == "__main__":
     app.run(debug=True)
