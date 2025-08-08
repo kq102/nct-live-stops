@@ -1,8 +1,12 @@
-"""web scraper for live data"""
+"""now thread safe web scraper for live data"""
 
 import time
 from threading import Lock
 from selenium.webdriver.common.by import By #for css selcetion
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
 
 scraper_lock = Lock()
 
@@ -15,7 +19,14 @@ def fetch_live_data_council(driver, stop_id):
             ## nottinghamshire county council gov site
             council_url = f"https://journeyplanner.nottinghamshire.gov.uk/departures/liveDepartures?stopId={stop_id}"
             driver.get(council_url)
-            time.sleep(1)  # await js loading
+
+            try:
+                element = WebDriverWait(driver, 2.3).until(
+                    EC.presence_of_all_elements_located((By.TAG_NAME,"lts-live-departure-card"))
+                )
+            except Exception as e:
+                print(f"ERROR: {e}")
+                
 
             # redundant use of stop names
             # council_stop_name = driver.find_element(By.TAG_NAME, "lts-stop-name").text
@@ -51,8 +62,13 @@ def fetch_live_data_nctx(driver, stop_id):
 
             driver.get(nct_url)
             
-            time.sleep(1)  # await js loading
-
+            try:
+                element = WebDriverWait(driver, 1).until(
+                    EC.presence_of_all_elements_located((By.CLASS_NAME,"departure-board__item"))
+                )
+            except Exception as e:
+                print(f"ERROR: {e}")
+                
             # redundant stop_name data
             # stop_name = driver.find_element(By.CLASS_NAME, "place-info-banner__name").text.strip()
             # stop_code = driver.find_element(By.CLASS_NAME, "place-info-banner__tablet").text.strip()
@@ -73,9 +89,9 @@ def fetch_live_data_nctx(driver, stop_id):
                 # Get the background color of the arrival cell
                 bg_color = arrival_element.value_of_css_property("background-color")
                 if bg_color == "rgba(223, 240, 216, 1)":
-                    live_or_not = "(Live)"
+                    live_or_not = "rgba(223, 240, 216, 1)"
                 else:
-                    live_or_not = ("(Schedueled)")
+                    live_or_not = "#f5f5f5"
 
                 nct_data_list.append(f"{route}~{destination}~{arrival}~{live_or_not}")
 

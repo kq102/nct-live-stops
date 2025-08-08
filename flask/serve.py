@@ -1,4 +1,5 @@
 import os
+import atexit
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv # for loading environment variables from a .env file
 
@@ -10,8 +11,6 @@ from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mon
 from flask_pymongo import PyMongo
 from flask import Flask, render_template, jsonify
 
-from contextlib import contextmanager
-import atexit
 
 # loading environment variables
 load_dotenv()
@@ -45,7 +44,7 @@ def home():
     """home page, renders map"""
     return render_template("stop_map.html")
 
-@app.route('/get_all_stops')
+@app.route('/api/get_all_stops')
 def get_all_stops():
     """Returns all NCT stops with coordinates"""
     stops = get_enriched_stops_without_mongo()
@@ -57,7 +56,7 @@ def get_all_stops():
         'lon': lon
     } for code, name, lat, lon in stops])
 
-@app.route('/compare_stop_times/<stop_id>')
+@app.route('/api/compare_stop_times/<stop_id>')
 def compare_stop_times(stop_id):
     """Load NCT and bus stop times"""
     try:

@@ -17,7 +17,7 @@
         position: absolute;
         top:10px;
         left:10px;
-        width: 650px;
+        width: 40vw;
         max-height: calc(100% - 20px);
         z-index:1000;
         display: flex;
@@ -120,7 +120,7 @@
         font-weight: bold;
         margin-bottom: 10px;
         padding-bottom: 5px;
-        border-bottom: 2px solid #007bff;
+        border-bottom: 2px solid #00dddd;
     }
 
 .timeEntry 
@@ -129,7 +129,7 @@
         justify-content: space-between;
         margin-bottom:12px;
         padding: 8px 0;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #bdbdbd;
     }
 
 .timeEntry-left
@@ -152,8 +152,9 @@
 
 .time
     {   
+        padding: 5px;
         font-weight: bold;
-        color:#3144ac;
+        background: var(--stop-color);
     }
 
 .loading 

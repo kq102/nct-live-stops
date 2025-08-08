@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // ESTABLISH TOP LEVEL OF THE STOPGEOJSON
         let stopGeoJson = {"type": "FeatureCollection", "features": []}
 
-        fetch('/get_all_stops')
+        fetch('api/get_all_stops')
             .then(response => response.json())
             .then(stops => {
                 stops.forEach(stop => {
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebarContent.innerHTML = '<div class="loading">Loading times...</div>';
         }
 
-        fetch(`/compare_stop_times/${stopId}`)
+        fetch(`api/compare_stop_times/${stopId}`)
             .then(response => response.json())
             .then(data => {
                 var newContent= `
@@ -262,14 +262,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         return times.map(time => {
-            const [route, dest, timeValue] = time.split('~');
+            const [route, dest, timeValue, live_or_not] = time.split('~');
             return `
                 <div class="timeEntry">
                     <div class=timeEntry-left>
                         <div class="route">${route}</div>
                         <div class="destination">${dest}</div>
                     </div>
-                    <div class="time">${timeValue}</div> 
+                    <div class="time_holder">
+                        <div class="time" style="--stop-color: ${live_or_not}">${timeValue}</div> 
+                    </div>
                 </div>
             `;
         }).join('');
