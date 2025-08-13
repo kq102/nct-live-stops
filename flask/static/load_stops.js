@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         accessToken: 'pk.eyJ1Ijoia3lsZW5jdHgiLCJhIjoiY21keWNuMW1sMDBrdDJscjExdHFsZzRxbiJ9.Hi9vxYCi1hph6lJMwSfZ2g'
     });
 
+    // adding map controls for navigation (+ and -), bearing reset, and geolocation button for mobiles 
     map.addControl(new mapboxgl.NavigationControl());
     map.addControl(new mapboxgl.FullscreenControl());
     map.addControl(new mapboxgl.GeolocateControl({
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var selectedStopId = null;
     var updateInterval;
 
+    // showing the sidebar, contains animated fade in and out
     function showSidebar()
     {
         var sidebar = document.getElementById('sidebar');
@@ -60,14 +62,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // ESTABLISH TOP LEVEL OF THE STOPGEOJSON
         let stopGeoJson = {"type": "FeatureCollection", "features": []}
 
-        fetch('api/get_all_stops')
+        fetch('api/stops')
             .then(response => response.json())
             .then(stops => {
                 stops.forEach(stop => {
                     // PARSING THE LATITUDE AND LONGITUD, CONVERT TO FLOAT
                     let coordinate = [parseFloat(stop.lon), parseFloat(stop.lat)];
 
-                    // REMOVEING THE LAT & LON FROM PROPERTIES BEFORE CREATING THE FEATURE
+                    // REMOVEING THE LAT & LON FROM PROPERTIES BEFORE CREATING THE FEATURE, STOPS DUPLICATE USE OF COORDINATES
                     let properties = stop;
                     delete properties.lon;
                     delete properties.lat;
@@ -78,23 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     // PUSH THE FEATURE TO THE LIST
                     stopGeoJson.features.push(feature)
 
-                    // const marker = L.circleMarker([stop.lat, stop.lon], {
-                    //     radius: 6,
-                    //     color: '#333',
-                    //     fillColor: '#fff',
-                    //     fillOpacity: 1,
-                    //     weight: 2
-                    // }).addTo(map);
-
-                    // marker.bindTooltip(stop.stop_name, {
-                    //     permanent: false,
-                    //     direction: 'top'
-                    // });
-
-                    // marker.on('click', () => selectStop(stop.stop_code, stop.stop_name));
-                    // marker.on('click', () => showSidebar())
-                    // stopMarkers[stop.stop_code] = marker;
-                    
                 });
                 // ADD GEOJSON OF STOPS AS A DATA SOURCE
                 map.addSource('stopGeoJson',{'type': 'geojson', 'generateId': true, 'data': stopGeoJson})
@@ -148,8 +133,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: 'click',
                     target: {layerId: 'stopGeoJson'},
                     handler: (e) => {
-                        selectStop(e.feature.properties.stop_code, e.feature.properties.stop_name);
+                        selectStop(e.feature.properties.stop_code, e.feature.properties.stop_name, e.feature.geometry.coordinates);
                         showSidebar()
+                        console.log(e.feature.geometry.coordinates)
                     }
                 })
                 map.addInteraction('map-click', {
@@ -161,7 +147,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    function selectStop(stopId, stopName) {
+    // function to call when stop is selected on the map, start time interval for updates
+    function selectStop(stopId, stopName, coordinate) {
         if (selectedStopId != stopId){
             sidebarContent.innerHTML = '<div class="loading">Loading times...</div>';
         }
@@ -172,40 +159,26 @@ document.addEventListener('DOMContentLoaded', function() {
             clearInterval(updateInterval);
         }
 
-        // // Reset marker styles
-        // Object.values(stopMarkers).forEach(marker => {
-        //     marker.setStyle({
-        //         color: '#333',
-        //         fillColor: '#fff'
-        //     });
-        // });
-
-        // // Highlight selected stop
-        // if (stopMarkers[selectedStopId]) {
-        //     stopMarkers[selectedStopId].setStyle({
-        //         color: '#007bff',
-        //         fillColor: '#007bff'
-        //     });
-        // }
-
-        updateStopTimes(selectedStopId, stopName);
+        updateStopTimes(selectedStopId, stopName, coordinate);
         
         // Start regular updates
         updateInterval = setInterval(() => {
-            updateStopTimes(selectedStopId, stopName);
+            updateStopTimes(selectedStopId, stopName, coordinate);
         }, 15000);
     }
 
-    function updateStopTimes(stopId, stopName) {
+    function updateStopTimes(stopId, stopName, coordinate) {
 
         // Only show loading on first load
         if ((!document.querySelector('.stopComparison'))) {
             sidebarContent.innerHTML = '<div class="loading">Loading times...</div>';
         }
 
-        fetch(`api/compare_stop_times/${stopId}`)
+        // fetch the times for the current stop selected
+        fetch(`api/stops/${stopId}/times`)
             .then(response => response.json())
             .then(data => {
+                // display the stop comparison text in the sidebar, containing title, countdown bar, street view link, times
                 var newContent= `
                     <div class="stopComparison">
                         <div class="comparisonTitle">${stopName}, ${stopId}</div>
@@ -213,6 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="progress"></div>
                         </div>                        
                         <div class="updateTime">Last updated: ${new Date().toLocaleTimeString()}</div>
+                        <a class="openStreetView" target="_blank" href="https://maps.google.com/maps?q=&layer=c&cbll=${coordinate[1]},${coordinate[0]}">Open Street View </a>
                         <div class="timeColumns">
                             <div class="timeColumn">
                                 <div class="columnTitle">NCT website & app times</div>
@@ -256,6 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    // removes the delimiter from the times and formats the grid elements with colour for nct
     function formatTimes(times) {
         if (!times || times.length === 0) {
             return '<div class="timeEntry">No times available</div>';
@@ -281,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('stopSearchInput');
     const searchButton = document.getElementById('searchStopButton');
 
+    // zooms in on stop containing search value
     function searchStop() {
         const searchValue = searchInput.value.trim().toLowerCase();
 

@@ -1,4 +1,4 @@
-import os
+import os, signal
 import atexit
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv # for loading environment variables from a .env file
@@ -44,7 +44,13 @@ def home():
     """home page, renders map"""
     return render_template("stop_map.html")
 
-@app.route('/api/get_all_stops')
+@app.route('/shutdown', methods = ['GET'])
+def stopServer():
+    os.kill(os.getpid(), signal.SIGINT)
+
+    return jsonify({"success": True, "message": "shutting down"})
+
+@app.route('/api/stops', methods=['GET'])
 def get_all_stops():
     """Returns all NCT stops with coordinates"""
     stops = get_enriched_stops_without_mongo()
@@ -56,7 +62,7 @@ def get_all_stops():
         'lon': lon
     } for code, name, lat, lon in stops])
 
-@app.route('/api/compare_stop_times/<stop_id>')
+@app.route('/api/stops/<stop_id>/times', methods=['GET'])
 def compare_stop_times(stop_id):
     """Load NCT and bus stop times"""
     try:
