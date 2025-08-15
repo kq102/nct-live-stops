@@ -16,16 +16,14 @@ from flask import Flask, render_template, jsonify
 load_dotenv()
 
 # load from env
-#user = os.getenv("MDBUSER")
-#pw = os.getenv("PASSW")
+user = os.getenv("MDBUSER")
+pw = os.getenv("PASSW")
 
 app = Flask (__name__)
-# IMPORTANT MONGODB CONNECTION
-#app.config["MONGO_URI"] = f"mongodb+srv://{user}:{pw}@mymongodb.inlkhpw.mongodb.net/nctxTracking?retryWrites=true&w=majority&appName=myMongoDB"
-#app.config["SCHEDULER_API_ENABLED"] = True
-#app.config['SCHEDULER_TIMEZONE'] = "Europe/London"
+#IMPORTANT MONGODB CONNECTION
+app.config["MONGO_URI"] = f"mongodb+srv://{user}:{pw}@mymongodb.inlkhpw.mongodb.net/nctxTracking?retryWrites=true&w=majority&appName=myMongoDB"
 
-#mongo = PyMongo(app)
+mongo = PyMongo(app)
 
 executor = ThreadPoolExecutor(max_workers=2)
 
@@ -37,12 +35,11 @@ def cleanup_resources():
         pass
     BrowserManager.quit_browser()
 
-
-
 @app.route('/')
 def home():
     """home page, renders map"""
     return render_template("stop_map.html")
+
 
 @app.route('/shutdown', methods = ['GET'])
 def stopServer():
@@ -53,8 +50,8 @@ def stopServer():
 @app.route('/api/stops', methods=['GET'])
 def get_all_stops():
     """Returns all NCT stops with coordinates"""
-    stops = get_enriched_stops_without_mongo()
-    # stops = get_enriched_stops(mongo)
+    #stops = get_enriched_stops_without_mongo()
+    stops = get_enriched_stops(mongo)
     return jsonify([{
         'stop_code': code,
         'stop_name': name,

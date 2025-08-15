@@ -20,8 +20,9 @@ class BrowserManager:
                 chrome_options.add_argument("--headless")
                 chrome_options.add_argument("--no-sandbox")
                 chrome_options.add_argument("--disable-dev-shm-usage")
+                chrome_options.binary_location = "/usr/bin/chromium"
                 # Path to chrome driver included in project
-                service = Service(executable_path="flask/chromedriver/chromedriver.exe")
+                service = Service(executable_path="/usr/bin/chromedriver")
                 cls._instance = webdriver.Chrome(service=service, options=chrome_options)
             return cls._instance
 

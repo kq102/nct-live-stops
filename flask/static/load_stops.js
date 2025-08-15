@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
         center: [-1.1581, 52.9548],
         zoom: 9.7,
         style: 'mapbox://styles/mapbox/standard',
-        accessToken: 'pk.eyJ1Ijoia3lsZW5jdHgiLCJhIjoiY21keWNuMW1sMDBrdDJscjExdHFsZzRxbiJ9.Hi9vxYCi1hph6lJMwSfZ2g'
+        accessToken: 'pk.eyJ1Ijoia3lsZW5jdHgiLCJhIjoiY21lYmR3dXZlMTRsYTJqcjBlZWJzdTk4eSJ9.j8IRG4QigfeWcpGG6eLKvQ'
     });
 
     // adding map controls for navigation (+ and -), bearing reset, and geolocation button for mobiles 

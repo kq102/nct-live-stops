@@ -8,5 +8,3 @@ def json_stops_lookup():
         data = json.load(stops_json)
 
     return data
-
-json_stops_lookup()

@@ -1,11 +1,9 @@
 """now thread safe web scraper for live data"""
 
-import time
 from threading import Lock
 from selenium.webdriver.common.by import By #for css selcetion
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 
 
 scraper_lock = Lock()
