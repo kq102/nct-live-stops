@@ -176,8 +176,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // fetch the times for the current stop selected
         fetch(`api/stops/${stopId}/times`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                if (data.status === 'error') {
+                    throw new Error(data.error || 'Unknown error occurred');
+                }
                 // display the stop comparison text in the sidebar, containing title, countdown bar, street view link, times
                 var newContent= `
                     <div class="stopComparison">
@@ -225,7 +233,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error fetching times:', error);
                 // Only show error if there's no existing content
                 if (!document.querySelector('.stopComparison')) {
-                    sidebarContent.innerHTML = '<div class="loading">Error loading times</div>';
+                    sidebarContent.innerHTML = `
+                        <div class="error">
+                            <div class="error-title">Error loading times</div>
+                            <div class="error-message">${error.message}</div>
+                            <button onclick="updateStopTimes('${stopId}', '${stopName}')">Retry</button>
+                        </div>`;
                 }
             });
     }

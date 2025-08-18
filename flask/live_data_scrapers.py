@@ -23,7 +23,7 @@ def fetch_live_data_council(driver, stop_id):
 
             ## wait until prescence of an element is detected before continuing
             try:
-                WebDriverWait(driver, 2.3).until(
+                WebDriverWait(driver, 2.5).until(
                     EC.presence_of_all_elements_located((By.TAG_NAME,"lts-live-departure-card"))
                 )
             except Exception as e:
@@ -65,7 +65,7 @@ def fetch_live_data_nctx(driver, stop_id):
             driver.get(nct_url)
             
             try:
-                WebDriverWait(driver, 1).until(
+                WebDriverWait(driver, 2.5).until(
                     EC.presence_of_all_elements_located((By.CLASS_NAME,"departure-board__item"))
                 )
             except Exception as e:

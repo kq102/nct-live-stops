@@ -16,14 +16,26 @@ class BrowserManager:
         """Initialize Chrome browser for scraping"""
         with cls._lock:
             if cls._instance is None and not cls._is_shutting_down:
-                chrome_options = Options()
-                chrome_options.add_argument("--headless")
-                chrome_options.add_argument("--no-sandbox")
-                chrome_options.add_argument("--disable-dev-shm-usage")
-                chrome_options.binary_location = "/usr/bin/chromium"
-                # Path to chrome driver included in project
-                service = Service(executable_path="/usr/bin/chromedriver")
-                cls._instance = webdriver.Chrome(service=service, options=chrome_options)
+                try:
+                    chrome_options = Options()
+                    chrome_options.add_argument("--headless")
+                    chrome_options.add_argument("--no-sandbox")
+                    chrome_options.add_argument("--disable-dev-shm-usage")
+                    #ccchrome_options.binary_location = "/usr/bin/chromium"
+                    chrome_options.add_argument('--disable-features=TranslateUI')
+                    chrome_options.add_argument('--disable-notifications')
+                    chrome_options.add_argument('--disable-popup-blocking')
+                    chrome_options.page_load_strategy = 'eager'
+                    
+                    # Set small window size to reduce memory
+                    chrome_options.add_argument('--window-size=800,600')
+                    # Path to chrome driver included in project
+                    #service = Service(executable_path="/usr/bin/chromedriver")
+                    service = Service(executable_path="flask/chromedriver/chromedriver.exe")
+                    cls._instance = webdriver.Chrome(service=service, options=chrome_options)
+                except Exception as e:
+                    print(f"Failed to initialize browser: {e}")
+                    return None
             return cls._instance
 
     @classmethod

@@ -11,7 +11,6 @@ from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mon
 from flask_pymongo import PyMongo
 from flask import Flask, render_template, jsonify
 
-
 # loading environment variables
 load_dotenv()
 
@@ -50,7 +49,7 @@ def stopServer():
 @app.route('/api/stops', methods=['GET'])
 def get_all_stops():
     """Returns all NCT stops with coordinates"""
-    #stops = get_enriched_stops_without_mongo()
+    # stops = get_enriched_stops_without_mongo()
     stops = get_enriched_stops(mongo)
     return jsonify([{
         'stop_code': code,
@@ -65,13 +64,19 @@ def compare_stop_times(stop_id):
     try:
         browser = BrowserManager.initialize_browser()
         if not browser:
-            return jsonify({'error': 'Browser unavailable'} ), 503
+            return jsonify({'error': 'Browser unavailable'}), 503
 
         nct_request = executor.submit(fetch_live_data_nctx, browser, stop_id)
         bus_stop_request = executor.submit(fetch_live_data_council, browser, stop_id)
 
         nct_times = nct_request.result()
         council_times = bus_stop_request.result()
+
+        if nct_times is None:
+            nct_times = []
+        
+        if council_times is None:
+            council_times = []
         
         return jsonify({
             'council_times': council_times,
@@ -81,7 +86,11 @@ def compare_stop_times(stop_id):
     # serve the error if it applies
     except Exception as e:
         print(f"Error comparing stop times: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e),
+                        'council_times': [],
+                        'nct_times': [],
+                        'status': 'error'
+                        }), 500
 
 try:
     app.teardown_appcontext(lambda exception: None)
