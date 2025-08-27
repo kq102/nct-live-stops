@@ -1,32 +1,45 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3-slim
+FROM python:3.10-slim
 
 RUN apt-get update && apt-get install -y \
-    chromium \
     chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
+    chromium \
+    fonts-liberation \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    --no-install-recommends && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 8917
 
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
+# Set environment variables
+ENV CHROME_BIN=/usr/bin/chromium \
+    CHROMEDRIVER_PATH=/usr/bin/chromedriver \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    CHROME_FLAGS="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage"
 
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+# Create non-root user first
+RUN adduser -u 5678 --disabled-password --gecos "" appuser
 
-ENV CHROME_FLAGS="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage --disable-software-rasterizer --disable-extensions --remote-debugging-port=9222 --memory-pressure-thresholds=1"
-# Install pip requirements
+# Set up directories and permissions
 WORKDIR /app
-COPY flask/requirements.txt .
+RUN mkdir -p /tmp/chrome /app/json_files && \
+    chown -R appuser:appuser /tmp/chrome /app
+
+# Copy and install requirements
+COPY flask/requirements.txt /app/
 RUN python -m pip install -r requirements.txt
 
-COPY . .
+# Copy application files
+COPY flask/json_files/stops.json /app/json_files/
+COPY flask/ /app/
+RUN chown -R appuser:appuser /app
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+# Switch to non-root user
 USER appuser
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["gunicorn", "--bind", "0.0.0.0:8917","--timeout", "120", "--workers", "1", "--threads", "2", "serve:app", "--chdir", "/app/flask"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8917","--timeout", "120", "--workers", "2", "--threads", "2", "serve:app"]

@@ -1,6 +1,7 @@
 services:
   nctlivestops:
     image: kylenctx/nctlivestops
+    shm_size: 0.5g
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,12 +11,17 @@ services:
       - flask/.env
     environment:
       - FLASK_ENV=production
+      - DOCKER_ENV=true
+    extra_hosts:
+      - "nctx.co.uk:104.18.30.191"
+      - "www.nctx.co.uk:104.18.30.191"
     deploy:
       resources:
         limits:
           memory: 512M
     volumes:
-      - ./flask:/app/flask:rw
+      - ./flask:/app:rw
+      - ./flask/json_files:/app/json_files:ro
 
   mongodb:
     image: mongo:latest
