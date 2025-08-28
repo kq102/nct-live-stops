@@ -26,7 +26,6 @@ def retrive_nct_stop_times(stop_id):
 
         # objAiDe = datetime.strptime(aimedDeparture,"%Y-%m-%dT%H:%M:%S%z")
         # objExDe = datetime.strptime(expectedDeparture,"%Y-%m-%dT%H:%M:%S%z") if expectedDeparture != "" else objAiDe
-        print(is_real_time)
         if is_real_time is True:
             live_or_not = "rgba(223, 240, 216, 1)"
         else:
