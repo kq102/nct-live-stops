@@ -2,7 +2,7 @@
 import os
 import signal
 import atexit
-
+import time
 from concurrent.futures import ThreadPoolExecutor
 from browser import BrowserManager
 from dotenv import load_dotenv # for loading environment variables from a .env file
@@ -14,7 +14,7 @@ from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mon
 from flask import Flask, render_template, jsonify
 from flask_pymongo import PyMongo
 
-
+browser = BrowserManager.initialize_browser()
 executor = ThreadPoolExecutor(max_workers=2)
 
 # loading environment variables
@@ -23,8 +23,8 @@ user = os.getenv("MDBUSER")
 pw = os.getenv("PASSW")
 
 app = Flask (__name__)
-app.config["MONGO_URI"] = f"mongodb+srv://{user}:{pw}@mymongodb.inlkhpw.mongodb.net/nctxTracking?retryWrites=true&w=majority&appName=myMongoDB"
-mongo = PyMongo(app)
+# app.config["MONGO_URI"] = f"mongodb+srv://{user}:{pw}@mymongodb.inlkhpw.mongodb.net/nctxTracking?retryWrites=true&w=majority&appName=myMongoDB"
+# mongo = PyMongo(app)
 
 def cleanup_resources():
     """clearing resources"""
@@ -48,8 +48,8 @@ def stopServer():
 @app.route('/api/stops', methods=['GET'])
 def get_all_stops():
     """Returns all NCT stops with coordinates"""
-    #stops = get_enriched_stops_without_mongo()
-    stops = get_enriched_stops(mongo)
+    stops = get_enriched_stops_without_mongo()
+    # stops = get_enriched_stops(mongo)
     return jsonify([{
         'stop_code': code,
         'stop_name': name,
@@ -62,13 +62,14 @@ def compare_stop_times(stop_id):
     """Load NCT and bus stop times"""
     try:
         nct_times = retrive_nct_stop_times(stop_id)
-
-        browser = BrowserManager.initialize_browser()
+        
         if not browser:
             return jsonify({'error': 'Browser unavailable'} ), 503
 
         bus_stop_request = executor.submit(fetch_live_data_council, browser, stop_id)
-        council_times = bus_stop_request.result()
+        council_times = bus_stop_request.result(timeout=60)
+        time.sleep(0.1)
+        BrowserManager.cleanup_session()
         
         return jsonify({
             'council_times': council_times,
@@ -78,6 +79,7 @@ def compare_stop_times(stop_id):
     # serve the error if it applies
     except Exception as e:
         print(f"Error comparing stop times: {e}")
+        BrowserManager.initialize_browser()
         return jsonify({'error': str(e)}), 500
 
 try:

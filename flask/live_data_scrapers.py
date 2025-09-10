@@ -4,9 +4,11 @@ from datetime import datetime
 from threading import Lock
 from dateutil import parser, tz
 import pytz
+import time
 from selenium.webdriver.common.by import By #for css selcetion
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import WebDriverException
 
 scraper_lock = Lock()
 uk_timezone = pytz.timezone("Europe/London")
@@ -54,35 +56,49 @@ def processing_api_response(response_body):
         print(f"Error processing API response: {e}")
         return []
     
-def getting_api_response(driver, log_entry):
+def getting_api_response(driver, log_entry, max_retries = 1):
     """extracting the api response from log entry"""
     # loads the logs from chrome, finds the council API response for departures
     # executes driver command to get the body of this response for processing
-    try:
-        log_data = json.loads(log_entry['message'])
-        if not all(key in log_data.get('message', {}) for key in ['method', 'params']):
-            return None
+    for attempt in range(max_retries):
+        try:
+            log_data = json.loads(log_entry['message'])
+            if not all(key in log_data.get('message', {}) for key in ['method', 'params']):
+                return None
 
-        if log_data['message']['method'] != 'Network.responseReceived':
-            return None
+            if log_data['message']['method'] != 'Network.responseReceived':
+                return None
 
-        response = log_data['message']['params']['response']
-        if 'api-manager-hub-uksouth-1.azure-api.net/d2n2/production/lts/lts/v1/public/departures' not in response.get('url', ''):
-            return None
+            response = log_data['message']['params']['response']
+            if 'api-manager-hub-uksouth-1.azure-api.net/d2n2/production/lts/lts/v1/public/departures' not in response.get('url', ''):
+                return None
 
-        request_id = log_data['message']['params']['requestId']
-        return driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': request_id})
-    
-    except Exception as e:
-        print(f"Error getting API response: {e}")
-        return None
+            request_id = log_data['message']['params']['requestId']
+            time.sleep(0.1)
+            try:
+                response_body = driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': request_id})
+                if response_body:
+                    return response_body
+            except WebDriverException as e:
+                if "No resource with given identifier found" in str(e):
+                    print(f"Resource not found on attempt {attempt + 1}")
+                    continue
+                raise
+        except Exception as e:
+            print(f"API response error: {e}")
+            if attempt == max_retries - 1:
+                return None
+            time.sleep(1)
 
 def fetch_live_data_council(driver, stop_id):
     """sets up chrome and selenium to get stop live data from nottinghamshire gov"""
     # makes the request to the council journey planner site first
+    departures_list = []
     with scraper_lock:
         try:
+            driver.execute_cdp_cmd('Network.enable', {})
             driver.execute_cdp_cmd('Network.clearBrowserCache', {})
+            driver.execute_cdp_cmd('Network.setCacheDisabled', {'cacheDisabled': True})
 
             ## nottinghamshire county council gov site
             council_url = f"https://journeyplanner.nottinghamshire.gov.uk/departures/liveDepartures?stopId={stop_id}"
@@ -91,16 +107,21 @@ def fetch_live_data_council(driver, stop_id):
             # use the driver to load the page the page the in the virtual browser
             ## wait until prescence of an element is detected before continuing
             #departure_cards =
-            WebDriverWait(driver, 3).until(
+            WebDriverWait(driver, 5).until(
                 EC.presence_of_all_elements_located((By.TAG_NAME,"lts-live-departure-card"))
             )
 
             # establish class process and list for holding the departures
             processor = DepartureProcessor()
-            departures_list = []
+           
+
+            logs = driver.get_log('performance')
+
+            # Clear logs after reading to prevent memory build-up
+            driver.execute_cdp_cmd('Log.clear', {})
 
             # Get network response for the api using function.
-            for log_entry in driver.get_log('performance'):
+            for log_entry in logs:
                 response_body = getting_api_response(driver, log_entry)
                 if not response_body:
                     continue
@@ -117,10 +138,21 @@ def fetch_live_data_council(driver, stop_id):
                     if formatted_departure:
                         departures_list.append(formatted_departure)
 
-            return departures_list
         except Exception as e:
             print(f"error fetching council data: {e}")
-            return []
         finally:
-            # Disable network tracking
-            driver.execute_cdp_cmd('Network.disable', {})
+            try:
+                # Cleanup
+                driver.execute_cdp_cmd('Network.disable', {})
+                driver.execute_cdp_cmd('Network.clearBrowserCache', {})
+                driver.execute_script('window.localStorage.clear();')
+                driver.execute_script('window.sessionStorage.clear();')
+
+                # Clear performance logs
+                if hasattr(driver, 'get_log'):
+                    _ = driver.get_log('performance')
+
+            except Exception as cleanup_error:
+                print(f"Error during cleanup: {cleanup_error}")
+
+    return departures_list
