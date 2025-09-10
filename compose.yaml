@@ -19,17 +19,3 @@ services:
     volumes:
       - ./flask:/app:rw
       - ./flask/json_files:/app/json_files:ro
-
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-
-volumes:
-  mongodb_data:

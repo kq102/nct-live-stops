@@ -190,11 +190,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 var newContent= `
                     <div class="stopComparison">
                         <div class="comparisonTitle">${stopName}, ${stopId}</div>
+                        <a id="openStreetView" target="_blank" href="https://maps.google.com/maps?q=&layer=c&cbll=${coordinate[1]},${coordinate[0]}">see location on Google Street View</a>
                         <div class="countdown-bar">
                             <div class="progress"></div>
                         </div>                        
                         <div class="updateTime">Last updated: ${new Date().toLocaleTimeString()}</div>
-                        <a class="openStreetView" target="_blank" href="https://maps.google.com/maps?q=&layer=c&cbll=${coordinate[1]},${coordinate[0]}">Open Street View </a>
                         <div class="timeColumns">
                             <div class="timeColumn">
                                 <div class="columnTitle">NCT website & app times</div>

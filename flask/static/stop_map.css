@@ -84,9 +84,20 @@
 .status 
     {
         display: inline-block;
-        margin-bottom: 10px;
-        color: #a781ff;
+        padding: 4px;
+        font-size: 0.9em;
+        margin-bottom: 8px;
         text-decoration: none;
+        background-color: #6a44c4;
+        border-radius: 4px;
+        color: whitesmoke;
+    }
+
+.status:hover 
+    {
+        background-color: #a044c4;
+        color: whitesmoke;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
 .stopComparison 
@@ -101,7 +112,7 @@
     {
         font-size: 1.2em;
         font-weight: bold;
-        margin-bottom: 15px;
+        margin-bottom: 5px;
         color: #333;
     }
 
@@ -170,16 +181,23 @@
         font-size: 0.8em;
         color: #666;
         text-align: left;
-        margin-top: 2.5px;
-        margin-bottom: 5px;
+        margin-top: 5px;
+        margin-bottom: 10px;
         font-style: italic;
+    }
+
+#openStreetView
+    {
+        display: inline-block;
+        margin-bottom: 5px;
+        font-size: 0.9em;
     }
 
 .countdown-bar 
     {
         width: 100%;
         height: 2px;
-        background-color: #eee;
+        background-color: #afafaf;
         position: relative;
         margin-top: 10px;
     }
@@ -187,10 +205,10 @@
 .countdown-bar .progress 
     {
         height: 100%;
-        background-color: #a781ff;
+        background-color: #03f0e4;
         width: 100%;
         transform-origin: left;
-        animation: countdown 10.5s linear infinite;
+        animation: countdown 11s linear infinite;
     }
 
 @keyframes countdown 

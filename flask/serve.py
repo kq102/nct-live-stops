@@ -2,24 +2,25 @@
 import os
 import signal
 import atexit
+import time
 from concurrent.futures import ThreadPoolExecutor
-from dotenv import load_dotenv # for loading environment variables from a .env file
 from live_data_scrapers import fetch_live_data_council
 from nct_ping import retrive_nct_stop_times
 from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mongo
-from flask_pymongo import PyMongo
+from passenger_stops import STOPS_DIRECTORY, get_and_extract,  extract_stops
+from flask_apscheduler import APScheduler # for the important scheduler jobs
+from apscheduler.schedulers.background import BackgroundScheduler # scheduler jobs keep running in bg
 from flask import Flask, render_template, jsonify
 
 executor = ThreadPoolExecutor(max_workers=2)
 
-# loading environment variables
-load_dotenv()
-user = os.getenv("MDBUSER")
-pw = os.getenv("PASSW")
-
 app = Flask (__name__)
-app.config["MONGO_URI"] = f"mongodb+srv://{user}:{pw}@mymongodb.inlkhpw.mongodb.net/nctxTracking?retryWrites=true&w=majority&appName=myMongoDB"
-mongo = PyMongo(app)
+app.config["SCHEDULER_API_ENABLED"] = True
+app.config['SCHEDULER_TIMEZONE'] = "Europe/London"
+
+scheduler = APScheduler(BackgroundScheduler(daemon=True))
+scheduler.init_app(app)
+scheduler.start()
 
 def cleanup_resources():
     """clearing resources"""
@@ -44,13 +45,10 @@ def stopServer():
 def get_all_stops():
     """Returns all NCT stops with coordinates"""
     # stops = get_enriched_stops_without_mongo()
-    stops = get_enriched_stops(mongo)
-    return jsonify([{
-        'stop_code': code,
-        'stop_name': name,
-        'lat': lat,
-        'lon': lon
-    } for code, name, lat, lon in stops])
+    # stops = get_enriched_stops(mongo)
+    stops = extract_stops()
+    time.sleep(0.1)
+    return jsonify(stops)
 
 @app.route('/api/stops/<stop_id>/times', methods=['GET'])
 def compare_stop_times(stop_id):
@@ -77,6 +75,11 @@ try:
     atexit.register(cleanup_resources)
 except Exception:
     pass
+
+@scheduler.task('cron', id='update_timetables_task', hour=7, minute=45, misfire_grace_time=3600)
+def scheduled_stop_update():
+    """scheduled to call function for a daily stops update"""
+    get_and_extract(STOPS_DIRECTORY)
 
 if __name__ == "__main__":
     app.run(debug=True)
