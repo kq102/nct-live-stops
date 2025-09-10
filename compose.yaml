@@ -12,9 +12,6 @@ services:
     environment:
       - FLASK_ENV=production
       - DOCKER_ENV=true
-    extra_hosts:
-      - "nctx.co.uk:104.18.30.191"
-      - "www.nctx.co.uk:104.18.30.191"
     deploy:
       resources:
         limits:

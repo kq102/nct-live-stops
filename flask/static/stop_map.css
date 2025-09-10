@@ -190,7 +190,7 @@
         background-color: #a781ff;
         width: 100%;
         transform-origin: left;
-        animation: countdown 22.5s linear infinite;
+        animation: countdown 10.5s linear infinite;
     }
 
 @keyframes countdown 

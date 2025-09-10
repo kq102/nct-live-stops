@@ -1,23 +1,55 @@
 """Web scraper for live data from council journeyplanner"""
 import json
-from datetime import datetime
-from threading import Lock
-from dateutil import parser, tz
+import os
+from datetime import datetime, timezone
+import requests
+from dateutil import parser
 import pytz
-import time
-from selenium.webdriver.common.by import By #for css selcetion
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import WebDriverException
+from dotenv import load_dotenv # for loading environment variables from a .env file
 
-scraper_lock = Lock()
+load_dotenv()
+key = os.getenv("COUNCIL_SUB_KEY")
+
 uk_timezone = pytz.timezone("Europe/London")
 
 class DepartureProcessor:
     """handling the api's departure data"""
     def __init__(self):
         self.now = datetime.now(uk_timezone)
-        # this is the current time
+        # sets the current time for the processor class functions
+
+    def get_api_response(self, stop_id):
+        """getting the council api response"""
+        local_offset = self.now.utcoffset()
+        client_offset_ms = int(-local_offset.total_seconds() * 1000)
+
+        utc_time = self.now.astimezone(timezone.utc)
+        formatted_time = utc_time.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+        url = "https://api-manager-hub-uksouth-1.azure-api.net/d2n2/production/lts/lts/v1/public/departures"
+        headers = {
+            "Ocp-Apim-Subscription-Key": f"{key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "clientTimeZoneOffsetInMS": client_offset_ms,
+            "departureDate": f"{formatted_time}",
+            "departureTime": f"{formatted_time}",
+            "stopIds": [stop_id],
+            "stopType": "BUS_STOP",
+            "stopName": "",  # optional, can be omitted
+            "crsCode": None,
+            "requestTime": f"{formatted_time}",
+            "departureOrArrival": "DEPARTURE",
+            "refresh": False
+        }
+        # POST request containing url, payload and headers containg important subscription key
+        response = requests.post(url, json=payload, headers=headers, timeout=20)
+
+        # get data from response
+        data = response.json()
+
+        return data
 
     def process_departure(self, departure_data):
         """Processing a single departure time entry"""
@@ -37,10 +69,13 @@ class DepartureProcessor:
             time_diff = real_time_uk - self.now
             due_time = str(int(time_diff.total_seconds() // 60)) + " mins"
             live_or_not = "#dff0d8"
-
+        
         else:
             due_time = real_time_uk.strftime("%H:%M")
             live_or_not = "#f5f5f5"
+
+        if due_time == "0 mins":
+            due_time = "Due"
         # removes departures that are in the past
         # recalculate realtime departures in minutes rather than HH:MM
         # adds realtime css colour highlight apply
@@ -50,109 +85,35 @@ def processing_api_response(response_body):
     """Process API response and extract departure information"""
     # loads in the json response and then goes into the stopDepartures section for further processing
     try:
-        result = json.loads(response_body["body"])
-        return result.get("stopDepartures", [])
+        result = response_body['stopDepartures']
+        return result
     except (json.JSONDecodeError, KeyError) as e:
         print(f"Error processing API response: {e}")
         return []
-    
-def getting_api_response(driver, log_entry, max_retries = 1):
-    """extracting the api response from log entry"""
-    # loads the logs from chrome, finds the council API response for departures
-    # executes driver command to get the body of this response for processing
-    for attempt in range(max_retries):
-        try:
-            log_data = json.loads(log_entry['message'])
-            if not all(key in log_data.get('message', {}) for key in ['method', 'params']):
-                return None
 
-            if log_data['message']['method'] != 'Network.responseReceived':
-                return None
-
-            response = log_data['message']['params']['response']
-            if 'api-manager-hub-uksouth-1.azure-api.net/d2n2/production/lts/lts/v1/public/departures' not in response.get('url', ''):
-                return None
-
-            request_id = log_data['message']['params']['requestId']
-            time.sleep(0.1)
-            try:
-                response_body = driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': request_id})
-                if response_body:
-                    return response_body
-            except WebDriverException as e:
-                if "No resource with given identifier found" in str(e):
-                    print(f"Resource not found on attempt {attempt + 1}")
-                    continue
-                raise
-        except Exception as e:
-            print(f"API response error: {e}")
-            if attempt == max_retries - 1:
-                return None
-            time.sleep(1)
-
-def fetch_live_data_council(driver, stop_id):
+def fetch_live_data_council(stop_id):
     """sets up chrome and selenium to get stop live data from nottinghamshire gov"""
-    # makes the request to the council journey planner site first
     departures_list = []
-    with scraper_lock:
-        try:
-            driver.execute_cdp_cmd('Network.enable', {})
-            driver.execute_cdp_cmd('Network.clearBrowserCache', {})
-            driver.execute_cdp_cmd('Network.setCacheDisabled', {'cacheDisabled': True})
+    try:
+        # establish class process and list for retrival and holding the departures
+        processor = DepartureProcessor()
 
-            ## nottinghamshire county council gov site
-            council_url = f"https://journeyplanner.nottinghamshire.gov.uk/departures/liveDepartures?stopId={stop_id}"
-            driver.get(council_url)
+        # Get network response for the api using function.
+        response_body = processor.get_api_response(stop_id)
 
-            # use the driver to load the page the page the in the virtual browser
-            ## wait until prescence of an element is detected before continuing
-            #departure_cards =
-            WebDriverWait(driver, 5).until(
-                EC.presence_of_all_elements_located((By.TAG_NAME,"lts-live-departure-card"))
-            )
+        # enters the actual stopDepartures section of the API response via funtion
+        stop_departures = processing_api_response(response_body)
 
-            # establish class process and list for holding the departures
-            processor = DepartureProcessor()
-           
+        # for each departure that is in the api response, extract information and format it
+        for departure in stop_departures[:26]:
+            real_time_uk, is_real_time = processor.process_departure(departure)
 
-            logs = driver.get_log('performance')
+            formatted_departure = processor.formatting_departure_entry(departure,real_time_uk, is_real_time)
 
-            # Clear logs after reading to prevent memory build-up
-            driver.execute_cdp_cmd('Log.clear', {})
+            if formatted_departure:
+                departures_list.append(formatted_departure)
 
-            # Get network response for the api using function.
-            for log_entry in logs:
-                response_body = getting_api_response(driver, log_entry)
-                if not response_body:
-                    continue
-
-                # enters the actual departures section of the API response via funtion
-                stop_departures = processing_api_response(response_body)
-
-                # for each departure that is in the api response, extract information and format it
-                for departure in stop_departures:
-                    real_time_uk, is_real_time = processor.process_departure(departure)
-
-                    formatted_departure = processor.formatting_departure_entry(departure,real_time_uk, is_real_time)
-
-                    if formatted_departure:
-                        departures_list.append(formatted_departure)
-
-        except Exception as e:
-            print(f"error fetching council data: {e}")
-        finally:
-            try:
-                # Cleanup
-                driver.execute_cdp_cmd('Network.disable', {})
-                driver.execute_cdp_cmd('Network.clearBrowserCache', {})
-                driver.execute_script('window.localStorage.clear();')
-                driver.execute_script('window.sessionStorage.clear();')
-
-                # Clear performance logs
-                if hasattr(driver, 'get_log'):
-                    _ = driver.get_log('performance')
-
-            except Exception as cleanup_error:
-                print(f"Error during cleanup: {cleanup_error}")
+    except Exception as e:
+        print(f"error fetching council data: {e}")
 
     return departures_list

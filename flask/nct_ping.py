@@ -1,8 +1,6 @@
 "uses mobile App API to get stop times"
 import requests # for making HTTP requests
 import json
-import datetime
-from datetime import datetime
 
 def retrive_nct_stop_times(stop_id):
     "uses mobile app API to retrieve times"

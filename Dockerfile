@@ -1,34 +1,18 @@
 FROM python:3.10-slim
 
-RUN apt-get update && apt-get install -y \
-    chromium-driver \
-    chromium \
-    fonts-liberation \
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
-    --no-install-recommends && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
 EXPOSE 8917
 
 # Set environment variables
-ENV CHROME_BIN=/usr/bin/chromium \
-    CHROMEDRIVER_PATH=/usr/bin/chromedriver \
-    PYTHONDONTWRITEBYTECODE=1 \
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    CHROME_FLAGS="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage"
+    PYTHONPATH=/app
 
 # Create non-root user first
 RUN adduser -u 5678 --disabled-password --gecos "" appuser
 
 # Set up directories and permissions
 WORKDIR /app
-RUN mkdir -p /tmp/chrome /app/json_files && \
-    chown -R appuser:appuser /tmp/chrome /app
+RUN mkdir -p /tmp/chrome /app/json_files
 
 # Copy and install requirements
 COPY flask/requirements.txt /app/

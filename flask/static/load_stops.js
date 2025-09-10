@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Start regular updates
         updateInterval = setInterval(() => {
             updateStopTimes(selectedStopId, stopName, coordinate);
-        }, 22500);
+        }, 10500);
     }
 
     function updateStopTimes(stopId, stopName, coordinate) {
