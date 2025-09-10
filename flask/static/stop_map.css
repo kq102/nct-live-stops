@@ -63,6 +63,7 @@
     }
 
 
+
 #vehicleSearchInput 
     {
         flex-grow: 1;
@@ -98,6 +99,20 @@
         background-color: #a044c4;
         color: whitesmoke;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+.selectFieldset
+    {
+        display: inline-block;
+        width: 40%vw;
+        font-size: 0.9em;
+        margin-bottom: 8px;
+        text-decoration: none;
+        border: 0;
+        border-radius: 4px;
+        padding: 2px;
+        color: whitesmoke;
+        background-color: #a044c4;
     }
 
 .stopComparison 

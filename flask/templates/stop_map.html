@@ -10,6 +10,16 @@
     <div id="leftSidePanel">
         <div id="searchSection">
             <a href="https://app.pulsetic.com/status/5e9TnbTi/" target="_blank" class="status">Service Status</a>
+            <fieldset class="selectFieldset">
+                <label>Select light preset</label>
+                <select id="lightPreset" name="lightPreset">
+                    <!-- Each value matches a light preset -->
+                    <option value="dawn">Dawn</option>
+                    <option value="day" selected="">Day</option>
+                    <option value="dusk">Dusk</option>
+                    <option value="night">Night</option>
+                </select>
+            </fieldset>
             <div class="searchWrapper">
                 <input id="stopSearchInput" type="text" placeholder="Search stop name...">
                 <button id = "searchStopButton">Search</button>

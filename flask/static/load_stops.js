@@ -21,9 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
     );
 
     // SET THE LIGHTING TO THE NICE DAWN PRESET. day is default, dusk, night also available
-    map.on('style.load', () => {
-        map.setConfigProperty('basemap', 'lightPreset', 'dawn');
-    });
+    document
+        .getElementById('lightPreset')
+        .addEventListener('change', function () {
+            map.setConfigProperty('basemap', 'lightPreset', this.value);
+        });
 
     var selectedStopId = null;
     var updateInterval;
