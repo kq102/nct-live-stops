@@ -6,7 +6,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from live_data_scrapers import fetch_live_data_council
 from nct_ping import retrive_nct_stop_times
-from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mongo
+from disruptions import retrieve_nct_disruptions
+# from get_stops_from_db import get_enriched_stops, get_enriched_stops_without_mongo
 from passenger_stops import STOPS_DIRECTORY, get_and_extract,  extract_stops
 from flask_apscheduler import APScheduler # for the important scheduler jobs
 from apscheduler.schedulers.background import BackgroundScheduler # scheduler jobs keep running in bg
@@ -60,9 +61,12 @@ def compare_stop_times(stop_id):
         bus_stop_request = executor.submit(fetch_live_data_council, stop_id)
         council_times = bus_stop_request.result(timeout=60)
         
+        stop_disruptions = retrieve_nct_disruptions(stop_id)
+
         return jsonify({
             'council_times': council_times,
-            'nct_times': nct_times
+            'nct_times': nct_times,
+            'stop_disruptions': stop_disruptions
         })
 
     # serve the error if it applies

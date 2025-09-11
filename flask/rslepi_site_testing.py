@@ -1,15 +1,15 @@
-import requests
-import json
+# import requests
+# import json
 
-def notts_derby_rslepi_test(stop_id):
-    API_URL = f"http://publicnottsderby.rslepi.co.uk/departureboards/mepiDepartureBoard.aspx?id={stop_id}"
+# def notts_derby_rslepi_test(stop_id):
+#     API_URL = f"http://publicnottsderby.rslepi.co.uk/departureboards/mepiDepartureBoard.aspx?id={stop_id}"
 
-    rslepi_data_list =[]
-    response = requests.get(API_URL, timeout=8)
-    response.raise_for_status()
-
-
-    print(response.text)
+#     rslepi_data_list =[]
+#     response = requests.get(API_URL, timeout=8)
+#     response.raise_for_status()
 
 
-notts_derby_rslepi_test(1)
+#     print(response.text)
+
+
+# notts_derby_rslepi_test(1)

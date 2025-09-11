@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     handler: (e) => {
                         selectStop(e.feature.properties.stop_code, e.feature.properties.stop_name, e.feature.geometry.coordinates);
                         showSidebar()
-                        console.log(e.feature.geometry.coordinates)
+                        // console.log(e.feature.geometry.coordinates)
                     }
                 })
                 map.addInteraction('map-click', {
@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="stopComparison">
                         <div class="comparisonTitle">${stopName}, ${stopId}</div>
                         <a id="openStreetView" target="_blank" href="https://maps.google.com/maps?q=&layer=c&cbll=${coordinate[1]},${coordinate[0]}">see location on Google Street View</a>
+                        <div class="disruptions">⚠️ Disruptions that may affect times at this stop: ${formatDisrputions(data.stop_disruptions)}</div>
                         <div class="countdown-bar">
                             <div class="progress"></div>
                         </div>                        
@@ -262,6 +263,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="time_holder">
                         <div class="time" style="--stop-color: ${live_or_not}">${timeValue}</div> 
                     </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function formatDisrputions(disruption_string) {
+        if (!disruption_string || disruption_string.length === 0) {
+            return 'None!';
+        }
+        return disruption_string.map(dis => {
+            const [header, activePeriod] = dis.split('~');
+            return `
+                <div class="distruptionHolder">
+                    <a href='https://www.nctx.co.uk/service-updates' target="_blank">
+                        <span class="header">${header}</span>
+                    </a>
+                    <div class="activePeriod">${activePeriod}</div>
                 </div>
             `;
         }).join('');

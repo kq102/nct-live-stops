@@ -194,7 +194,7 @@
 .updateTime 
     {
         font-size: 0.8em;
-        color: #666;
+        color: #777;
         text-align: left;
         margin-top: 5px;
         margin-bottom: 10px;
@@ -206,6 +206,25 @@
         display: inline-block;
         margin-bottom: 5px;
         font-size: 0.9em;
+    }
+
+.distruptions
+    {
+        margin-bottom: 5px;
+    }
+
+.header
+    {
+        font-size:0.9em;
+        color: black;
+    }
+
+.activePeriod
+    {
+        font-size: 0.85em;
+        color: #777;
+        margin-bottom: 10px;
+        font-style: italic;
     }
 
 .countdown-bar 
