@@ -9,7 +9,7 @@ import requests
 
 # timetables api, directory to save the xml timetables to and txc namespace form xml
 STOPS_API_URL = "https://data.discoverpassenger.com/operator/nctx/dataset/current/download/gtfs"
-STOPS_DIRECTORY = "psgr_files"
+STOPS_DIRECTORY = "flask/psgr_files"
 
 def get_and_extract(target_dir):
     """get data from BODS and extract the zip, use a temp directory for safety"""

@@ -47,8 +47,8 @@ def get_all_stops():
     """Returns all NCT stops with coordinates"""
     # stops = get_enriched_stops_without_mongo()
     # stops = get_enriched_stops(mongo)
+    time.sleep(0.2)
     stops = extract_stops()
-    time.sleep(0.1)
     return jsonify(stops)
 
 @app.route('/api/stops/<stop_id>/times', methods=['GET'])
@@ -80,10 +80,19 @@ try:
 except Exception:
     pass
 
-@scheduler.task('cron', id='update_timetables_task', hour=7, minute=45, misfire_grace_time=3600)
+@scheduler.task('interval', id='update_stops', seconds=7200, max_instances=1, misfire_grace_time=1000)
 def scheduled_stop_update():
     """scheduled to call function for a daily stops update"""
-    get_and_extract(STOPS_DIRECTORY)
+    # get and extract the timetable XML files from zip files
+    for attempt in range(5):
+        try:
+            get_and_extract(STOPS_DIRECTORY)
+            print(f"\n--- Extract attempt: {attempt+1} successful ---")
+        except Exception as e:
+            print(f"\n--- Attempt {attempt+1}: Error: {e} ---")
+            time.sleep(2)
+
+    print("done")
 
 if __name__ == "__main__":
     app.run(debug=True)
