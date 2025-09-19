@@ -46,13 +46,13 @@ def get_and_extract(target_dir):
 
 def extract_stops():
     """function to open the stops.txt file that has been downloaded, extract the relevant field"""
-    if os.path.exists(STOPS_DIRECTORY):
+    file_path = f"{STOPS_DIRECTORY}/stops.txt"
+    if os.path.exists(file_path):
         pass
 
     else:
         get_and_extract(STOPS_DIRECTORY)
-
-    file_path = f"{STOPS_DIRECTORY}/stops.txt"
+        extract_stops()
 
     # List to store extracted stop data
     stops = []
